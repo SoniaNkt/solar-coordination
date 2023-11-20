@@ -13,7 +13,9 @@ admin.site.register(EnergyPricing, EnergyPricingAdmin)
 
 
 class ConditionAdmin(admin.ModelAdmin):
-    list_display = ("ui_type", "group_size",)
+    list_display = ['ui_type', 'group_size', 'active', 'n_participants', 'n_test_participants']
+    list_editable = ['active']
+    
 
 admin.site.register(Condition, ConditionAdmin)
 
