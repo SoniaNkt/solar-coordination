@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import EnergyPricing, Condition, SolarGenerationProfile, SolarGeneration, StudyRun, User, ComfortProfile, ComfortCostSlot, Booking, Participant
+from .models import EnergyPricing, Condition, SolarGenerationProfile,\
+      SolarGeneration, StudyRun, ComfortProfile, ComfortCostSlot,\
+          Booking, Participant
 
 # Register your models here.
 
@@ -11,7 +13,7 @@ admin.site.register(EnergyPricing, EnergyPricingAdmin)
 
 
 class ConditionAdmin(admin.ModelAdmin):
-    list_display = ("name", "ui_type", "group_size",)
+    list_display = ("ui_type", "group_size",)
 
 admin.site.register(Condition, ConditionAdmin)
 
@@ -34,10 +36,10 @@ class StudyRunAdmin(admin.ModelAdmin):
 admin.site.register(StudyRun, StudyRunAdmin)
 
 
-class UserAdmin(admin.ModelAdmin):
-    list_display = ("name", "study_run",)
+# class UserAdmin(admin.ModelAdmin):
+#     list_display = ("name", "study_run",)
 
-admin.site.register(User, UserAdmin)
+# admin.site.register(User)
 
 
 class ComfortProfileAdmin(admin.ModelAdmin):

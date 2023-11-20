@@ -21,6 +21,6 @@ from django.conf import settings
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("solar_coordination_classic/", include("solar_coordination_classic.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
+    path("", include("solar_coordination_classic.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

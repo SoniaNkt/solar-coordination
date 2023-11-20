@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -12,12 +13,33 @@ class EnergyPricing(models.Model):
         return self.name
 
 class Condition(models.Model):
-    name = models.CharField(max_length=50)
+    # name = models.CharField(max_length=50)
     ui_type = models.CharField(max_length=50)
     group_size = models.IntegerField()
 
+    active = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('ui_type', 'group_size')
+
     def __str__(self):
-        return f"{self.name} ({self.ui_type})"
+        return f"{self.ui_type} ({self.ui_type})"
+
+    def n_participants(self):
+        n_participants = Participant.objects.filter(
+            condition=self
+        ).exclude(
+            user__username__startswith='TEST_USER__').count()
+        return n_participants
+
+    def n_test_participants(self):
+        n_participants = Participant.objects.filter(
+            condition=self
+        ).filter(
+            user__username__startswith='TEST_USER__').count()
+        return n_participants
+
+
 
 class SolarGenerationProfile(models.Model):
     name = models.CharField(max_length=50)
@@ -37,14 +59,14 @@ class StudyRun(models.Model):
     condition = models.ForeignKey(Condition, on_delete=models.CASCADE, null=True)
     #relationship with 'condition' and 'solar_generation_profile'
 
-class User(models.Model):
-    name = models.CharField(max_length=100)
-    password = models.CharField(max_length=100)
-    study_run = models.ForeignKey(StudyRun, on_delete=models.CASCADE, null=True)
-    #relationship with 'study_run'
+# class User(models.Model):
+#     name = models.CharField(max_length=100)
+#     password = models.CharField(max_length=100)
+#     study_run = models.ForeignKey(StudyRun, on_delete=models.CASCADE, null=True)
+#     #relationship with 'study_run'
 
-    def __str__(self):
-        return self.name
+#     def __str__(self):
+#         return self.name
 
 class ComfortProfile(models.Model):
     name = models.CharField(max_length=50)
@@ -62,6 +84,7 @@ class Participant(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     comfort_profile = models.ForeignKey(ComfortProfile, on_delete=models.CASCADE, null=True)
     #relationship with 'user' and 'cost_comfort_profile'
+    condition = models.ForeignKey(Condition, on_delete=models.CASCADE, null=True)
 
 class Booking(models.Model):
     name = models.CharField(max_length=50)

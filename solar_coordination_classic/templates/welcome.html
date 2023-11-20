@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+<!-- {% load static %} -->
+
+{% load static %}
+
+{% block js_imports %}
+    <script src="{% static 'solar_coordination_classic/js/welcome.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class='jumbotron text-center'>
+  <h1>Welcome</h1>
+</div>
+
+<br>
+<p>Thank you for your interest in the study!</p>
+
+<p>On the next page you will be presented with information about the study and what your participation involves.</p>
+<p>Please read the information carefully. You will only be able to proceed with the study if you consent to the participant information.</p>
+
+<br>
+
+<p>When you are ready, press &quot;start&quot;.</p>
+
+<div class="form-group form-check">
+    <input type="checkbox" class="form-check-input" id="consentCheck">
+    <label class="form-check-label" for="consentCheck">I agree to the terms above</label>
+</div>
+
+<div id="button-div">
+  <button class="btn btn-dark" id="startButton" disabled>Start</button>
+</div>
+{% endblock %}
