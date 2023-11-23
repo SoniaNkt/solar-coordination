@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block js_imports %}
+    <script src="{% static 'solar_coordination_classic/js/overview.js' %}"></script>
+{% endblock %}
+
+
+{% block css_files %}
+{% endblock %}
+
+{% block page_title %} Solar Coordination Calendar {% endblock %}
+
+{% block content %}
+
+{% comment %} <script type="text/javascript"> 
+    var solarValues = {{ solar_values }}; 
+    console.log(solarValues);
+</script> {% endcomment %}
+    
+    {% comment %} <script>
+        var jsonData = "{{ json_response }}";
+        console.log(jsonData)
+    </script> {% endcomment %}
+
+   <div class="container overview">
+        {% comment %} <p>{{ solar_values }}</p> {% endcomment %}
+        <div class="row" style="margin-bottom:0">
+            <div class="col-12">
+                <button class="btn btn-secondary" style="float: left; margin-right: 1em;" id="addNewBooking"><i class="bi bi-plus-circle-fill"></i> BOOK</button>  
+                <button class="btn btn-secondary" style="float: right; margin-left: 1em;"> <a style="color:white;text-decoration: none;" href="{% url 'logout' %}"> <i class="bi bi-box-arrow-right"></i> LOGOUT </a></button>
+            </div>
+            
+            {% comment %} Booking Modal {% endcomment %}
+            <div class="modal fade" id="bookingModal" tabindex="-1" role="dialog" aria-labelledby="bookingModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="bookingModalLabel">Make a booking</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <p id="hourSelected"></p>
+                      <p id="amountSelected"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Book</button>
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            {% comment %} End of Booking Modal {% endcomment %}
+            
+            <div class="col-md-12 col-xl-10">
+                <img id="legend" style="max-width: 500px;width:100%" src="{% static 'solar_coordination_classic/css/images/legend.svg' %}"/>
+            </div>
+
+            <div class="col-md-12 col-xl-10 canvas" style="padding-top: 50px;">
+            </div>
+
+            <div class="col-md-12 col-xl-2" style="padding-top: 40px;">
+                <h5>My Bookings</h5>
+                <div id="bookingList"></div>
+            </div>
+
+        </div>
+    </div>  
+
+{% endblock %}

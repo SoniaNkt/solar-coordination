@@ -9,4 +9,6 @@ urlpatterns = [
 
     path("task", views.index, name="main"),
     path("overview", views.overview, name="overview"),
+    path("fetch_solar_values", views.fetch_solar_values, name="fetch_solar_values"),
+
 ]

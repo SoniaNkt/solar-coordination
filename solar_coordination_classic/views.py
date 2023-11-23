@@ -18,7 +18,7 @@ from django.shortcuts import render
 from django.http import Http404
 from django.contrib.auth.decorators import login_required
 
-from .models import Participant, Condition
+from .models import Participant, Condition, SolarGeneration, SolarGenerationProfile
 from .djutils import to_dict
 # Create your views here.
 
@@ -83,14 +83,17 @@ def participants_view(request):
 @login_required
 def index(request):
     try:
-        return render(request, "solar_coordination_classic/index.html")
+        return render(request, "index.html")
     except:
         raise Http404()
 
 @login_required
 def overview(request):
-    print('overview')
-    solar_values = [0,0,0,0,0,10,40,53,60,100,90,72,50,11,0,0,0,0,0]
-    return render(request, "solar_coordination_classic/overview.html", {
-        "solar_values": solar_values
-        })
+    return render(request, "overview.html")
+
+def fetch_solar_values(request):
+    default_profile = SolarGenerationProfile.objects.get(name="Sunny Autumn Day")  
+    solar_values = SolarGeneration.objects.filter(solar_generation_profile=default_profile).order_by('hour').only('hour', 'amount')
+    solar_values_list = [{'hour': str(item.hour), 'amount': item.amount} for item in solar_values]
+
+    return JsonResponse({'data': solar_values_list})
