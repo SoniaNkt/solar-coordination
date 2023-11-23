@@ -126,5 +126,5 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_REDIRECT_URL = "/solar_coordination_classic/"
-LOGOUT_REDIRECT_URL = "/solar_coordination_classic/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
