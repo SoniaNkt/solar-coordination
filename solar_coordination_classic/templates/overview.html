@@ -13,25 +13,12 @@
 
 {% block content %}
 
-{% comment %} <script type="text/javascript"> 
-    var solarValues = {{ solar_values }}; 
-    console.log(solarValues);
-</script> {% endcomment %}
-    
-    {% comment %} <script>
-        var jsonData = "{{ json_response }}";
-        console.log(jsonData)
-    </script> {% endcomment %}
-
    <div class="container overview">
-        {% comment %} <p>{{ solar_values }}</p> {% endcomment %}
         <div class="row" style="margin-bottom:0">
             <div class="col-12">
-                <button class="btn btn-secondary" style="float: left; margin-right: 1em;" id="addNewBooking"><i class="bi bi-plus-circle-fill"></i> BOOK</button>  
-                <button class="btn btn-secondary" style="float: right; margin-left: 1em;"> <a style="color:white;text-decoration: none;" href="{% url 'logout' %}"> <i class="bi bi-box-arrow-right"></i> LOGOUT </a></button>
+                <button class="btn btn-dark btn-secondary" style="float: right; margin-left: 1em;"> <a style="color:white;text-decoration: none;" href="{% url 'logout' %}"> <i class="bi bi-box-arrow-right"></i> LOGOUT </a></button>
             </div>
-            
-            {% comment %} Booking Modal {% endcomment %}
+
             <div class="modal fade" id="bookingModal" tabindex="-1" role="dialog" aria-labelledby="bookingModalLabel" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                   <div class="modal-content">
@@ -41,22 +28,64 @@
                         <span aria-hidden="true">&times;</span>
                       </button>
                     </div>
+
                     <div class="modal-body">
-                      <p id="hourSelected"></p>
-                      <p id="amountSelected"></p>
-                    </div>
+                      <form method="post">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+            
+                            <div class="form-group">
+                                <label for="hour">Time selected:</label>
+                                <input type="text" class="form-control" id="hourSelected" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="selectedActivity">Activity:</label>
+                                <select class="form-control" id="selectedActivity" required>
+                                    <option disabled selected value>Click to select the activity you would like to book</option>
+                                    <option value="Oven (2Hrs)">Oven (2Hrs)</option>
+                                    <option value="Dishwasher (2Hrs)">Dishwasher (2Hrs)</option>
+                                    <option value="Washing Machine (3Hrs)">Washing Machine (3Hrs)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                {% comment %} <label for="amount">Amount:</label> {% endcomment %}
+                                <input type="hidden" id="amount" name="amount" class="form-control" readonly>
+                            </div>
+                      </form>
+                    </div>  
+
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" data-dismiss="modal">Book</button>
                       <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      <button type="button" class="btn btn-success" id="saveBooking">Book</button>
                     </div>
                   </div>
                 </div>
-            </div>
+              </div>
             {% comment %} End of Booking Modal {% endcomment %}
             
             <div class="col-md-12 col-xl-10">
                 <img id="legend" style="max-width: 500px;width:100%" src="{% static 'solar_coordination_classic/css/images/legend.svg' %}"/>
             </div>
+
+            {% comment %} Booking success/error messages {% endcomment %}
+            <div class="col-md-12 col-xl-10">
+                <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
+                    You have successfully created a booking.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" id="error-alert">
+                    An error occurred while creating your booking.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            </div>
+            {% comment %} End of Booking success/error messages {% endcomment %}
 
             <div class="col-md-12 col-xl-10 canvas" style="padding-top: 50px;">
             </div>
@@ -64,6 +93,24 @@
             <div class="col-md-12 col-xl-2" style="padding-top: 40px;">
                 <h5>My Bookings</h5>
                 <div id="bookingList"></div>
+                <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th scope="col">Time</th>
+                        <th scope="col">Activity</th>
+                        <th scope="col">Consupmtion</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in user_bookings %}
+                            <tr>
+                                <td>{{ booking.hour }}00Hrs</td>
+                                <td>{{ booking.name }}</td>
+                                <td>{{ booking.amount|floatformat:0 }}kW</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                  </table>
             </div>
 
         </div>

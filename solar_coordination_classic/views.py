@@ -1,25 +1,24 @@
 # coding: utf-8
 import json
 from random import gauss, randrange, randint, choice as random_choice
+from collections import defaultdict
 
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
-from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse, Http404
+from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 
 from django.contrib.auth.models import User
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.utils.timezone import datetime
 from django.db import IntegrityError
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 
-from django.shortcuts import render
-from django.http import Http404
-from django.contrib.auth.decorators import login_required
-
-from .models import Participant, Condition, SolarGeneration, SolarGenerationProfile
+from .models import Participant, Condition, SolarGeneration, SolarGenerationProfile, Booking
 from .djutils import to_dict
+
 # Create your views here.
 
 
@@ -89,11 +88,51 @@ def index(request):
 
 @login_required
 def overview(request):
-    return render(request, "overview.html")
+    current_user = request.user
+    user_bookings = Booking.objects.filter(user=current_user).order_by('hour')
 
+    return render(request, 'overview.html', {'user_bookings': user_bookings})
+
+@login_required
 def fetch_solar_values(request):
     default_profile = SolarGenerationProfile.objects.get(name="Sunny Autumn Day")  
     solar_values = SolarGeneration.objects.filter(solar_generation_profile=default_profile).order_by('hour').only('hour', 'amount')
-    solar_values_list = [{'hour': str(item.hour), 'amount': item.amount} for item in solar_values]
+
+    booking_values = (
+        Booking.objects
+        .values('hour')
+        .annotate(cumulative_booking_amount=Sum('amount'))
+        .order_by('hour')
+    )   
+
+    solar_values_dict = {str(item.hour): item.amount for item in solar_values}
+    booking_values_dict = {str(item['hour']): item['cumulative_booking_amount'] for item in booking_values}
+
+    solar_values_list = []
+    for hour, solar_amount in solar_values_dict.items():
+        booked_amount = booking_values_dict.get(hour, 0)  # Get the cumulative booked amount or default to 0
+        solar_values_list.append({'hour': hour, 'amount': [int(solar_amount), booked_amount]})
 
     return JsonResponse({'data': solar_values_list})
+     
+@csrf_exempt
+@login_required
+def create_booking(request):
+    if request.method == 'POST':
+        hour = request.POST.get('hour')
+        amount = request.POST.get('amount')
+        name = request.POST.get('name')
+        user = request.user 
+
+        booking = Booking.objects.create(
+            user=user,
+            hour=hour,
+            name=name,
+            amount=amount,
+        )
+
+        booking.save()
+        return redirect('overview')
+
+    response_data = {'error': 'Unsupported method'}
+    return JsonResponse(response_data, status=405)

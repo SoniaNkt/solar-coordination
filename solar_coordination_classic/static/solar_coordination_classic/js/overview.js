@@ -25,10 +25,6 @@ const entireGraph = svg.append('g')
 const yAxisGroup = entireGraph.append('g')
     .attr('transform', `translate(0, 0)`); // Move the y-axis to the left
 
-$(document).ready(function () {
-    $('[data-toggle="popover"]').popover();
-});
-
 // Pull JSON data
 d3.json('/fetch_solar_values').then(json => {
     data = json.data
@@ -37,7 +33,7 @@ d3.json('/fetch_solar_values').then(json => {
     const maxRectWidth = graphWidth - margin.right //largest bar padded on the right side
 
     const x = d3.scaleLinear() // Use a linear scale for x-axis
-        .domain([0, d3.max(data, d => parseFloat(d.amount))])
+        .domain([0, d3.max(data, d => parseFloat(d.amount[0]))])
         .range([0, maxRectWidth]);
 
     const y = d3.scaleBand() // Use a band scale for y-axis
@@ -54,12 +50,12 @@ d3.json('/fetch_solar_values').then(json => {
         .append('g')
         .attr('class', 'rect-group')
         .attr('data-hour', d => d.hour)
-        .attr('data-amount', d => d.amount);
+        .attr('data-amount', d => d.amount[0]);
 
     rectGroups.append('rect')
         .attr('class', 'background-rect')  //class for the grey background rect
         .attr('data-hour', d => d.hour)
-        .attr('data-amount', d => d.amount)
+        .attr('data-amount', d => d.amount[0])
         .attr('width', d => graphWidth)
         .attr('height', y.bandwidth())
         .attr('fill', '#dcdcdc66')
@@ -79,7 +75,7 @@ d3.json('/fetch_solar_values').then(json => {
 
     rectGroups.append('rect')
         .attr('class', 'solar-rect')  //class for solar rect
-        .attr('width', d => x(d.amount))
+        .attr('width', d => x(d.amount[0]))
         .attr('height', yBandWidthBuffered)
         .attr('fill', '#FFAE42')
         .attr('x', 20)
@@ -87,38 +83,35 @@ d3.json('/fetch_solar_values').then(json => {
 
     rectGroups.append('rect')
         .attr('class', 'booked-rect')  //class for booked rect
-        .attr('width', d => 5)
+        .attr('width', d => x(d.amount[1]))
         .attr('height', yBandWidthBuffered)
         .attr('fill', '#444444')
         .attr('x', 20)
         .attr('y', d => y(d.hour) + (yBandWidth - yBandWidthBuffered) / 2); //calculate the vertical position with some buffer
 
-
-    // click to book if solar is available    
-    rectGroups.on('click', (event, d) => {
-        if (parseFloat(d.amount) > 0) {
-            const modalHour = document.getElementById('hourSelected');
-            const modalAmount = document.getElementById('amountSelected');
-            modalHour.textContent = `Hour: ${d.hour}`;
-            modalAmount.textContent = `Amount: ${d.amount}`;
-            $('#bookingModal').modal('show');
-        }
-    });
-
     // provide rect-group solar data on hover
     rectGroups.on('mouseenter', function (event, d) {
-        if (parseFloat(d.amount) === 0) {
+        if (parseFloat(d.amount[0]) === 0) {
             const $this = $(this); // jQuery object for the clicked rect-group
-            const popoverMsg = `No solar power was generated at ${d.hour}`;
+            const popoverMsg = `No solar energy was generated at ${d.hour}`;
             $this.popover({
                 trigger: 'hover',
                 content: popoverMsg,
                 placement: 'right',
             });
-            $this.popover('show'); // Show the popover
+            $this.popover('show');
+        } else if (parseFloat(d.amount[0]) > 0 && parseFloat(d.amount[1]) < parseFloat(d.amount[0])) {
+            const $this = $(this);
+            const popoverMsg = `Solar energy is available at ${d.hour}. Click to book.`;
+            $this.popover({
+                trigger: 'hover',
+                content: popoverMsg,
+                placement: 'right'
+            });
+            $this.popover('show');
         } else {
             const $this = $(this);
-            const popoverMsg = `Solar power is available at ${d.hour}. Click to book.`;
+            const popoverMsg = `${d.hour} is fully booked.`;
             $this.popover({
                 trigger: 'hover',
                 content: popoverMsg,
@@ -128,7 +121,86 @@ d3.json('/fetch_solar_values').then(json => {
         }
     }).on('mouseleave', function () {
         const $this = $(this);
-        $this.popover('hide'); // Hide popover when mouse leaves
+        $this.popover('hide');
+    });
+
+    // click to book if solar is available    
+    rectGroups.on('click', (event, d) => {
+        if (parseFloat(d.amount[0]) > 0 && parseFloat(d.amount[1]) < parseFloat(d.amount[0])) {
+            // Populate the hour input field in the modal
+            $('#hourSelected').val(d.hour);
+
+            $('#bookingModal').modal('show');
+        }
+    });
+
+    $(document).ready(function () {
+        $('[data-toggle="popover"]').popover();
+
+        // Listen for changes in the 'activity' select field on the booking modal
+        $('#selectedActivity').on('change', function () {
+            const selectedActivity = $(this).val();
+            const amount = $('#amount');
+
+            // Update the 'amount' based on the selected option
+            if (selectedActivity === 'Oven (2Hrs)') {
+                amount.val(200);
+            } else if (selectedActivity === 'Dishwasher (2Hrs)') {
+                amount.val(250);
+            } else if (selectedActivity === 'Washing Machine (3Hrs)') {
+                amount.val(350);
+            } else {
+                amount.val('');
+            }
+        });
+    });
+
+    // Hide success/error elements when not called
+    document.getElementById('success-alert').classList.add('d-none');
+    document.getElementById('error-alert').classList.add('d-none');
+
+
+    // Show the alert when success/error occurs
+    function showSuccessAlert() {
+        document.getElementById('success-alert').classList.remove('d-none');
+    }
+
+    function hideSuccessAlert() {
+        document.getElementById('success-alert').classList.add('d-none');
+    }
+
+    function showErrorAlert() {
+        document.getElementById('error-alert').classList.remove('d-none');
+    }
+
+    function hideErrorAlert() {
+        document.getElementById('error-alert').classList.add('d-none');
+    }
+
+    $('#saveBooking').on('click', () => {
+        const hour = $('#hourSelected').val();
+        const selectedActivity = $('#selectedActivity').val();
+        const amount = $('#amount').val();
+
+        $.ajax({
+            type: 'POST',
+            url: '/create_booking/',
+            data: {
+                'name': selectedActivity,
+                'hour': hour,
+                'amount': amount,
+                // csrfmiddlewaretoken: '{{ csrf_token }}'  // Include the CSRF token for security
+            },
+            success: function () {
+                $('#bookingModal').modal('hide');
+                showSuccessAlert();
+                setTimeout(hideSuccessAlert, 5000);
+            },
+            error: function () {
+                showErrorAlert();
+                setTimeout(hideErrorAlert, 5000);
+            }
+        });
     });
 
     // Create and call the axes
