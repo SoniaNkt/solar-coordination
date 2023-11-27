@@ -1,9 +1,9 @@
-const svgWidth = 800;
+const svgWidth = 1000;
 const svgHeight = 800;
 
 const svg = d3.select('.canvas')
     .append('svg')
-    .attr('style', 'outline: thin solid black;')
+    .attr('style', 'outline: thin solid #71797E;')
     .attr('width', svgWidth)
     .attr('height', svgHeight);
 

@@ -1,9 +1,25 @@
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@300&display=swap");
 
-html {
-  font-family: "Montserrat", sans-serif;
+html, body {
+  font-family: "Montserrat", sans-serif !important;
 }
 
-.rect-group{
+.container-fluid{
+  width: 90%;
+  margin-left: 100px;
+  /* margin-right: 500px; */
+}
+
+.row {
+  padding:30px 30px 15px 30px;
+}
+
+.rect-group {
   cursor: pointer;
+}
+
+.btn {
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 16px;
 }
