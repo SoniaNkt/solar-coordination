@@ -1,20 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-<!-- JavaScript Libraries: These should live on base.html, experiencing issues with static -->
-
-<script src="{% static 'libs/bootstrap-5.0.2-dist/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'libs/d3.v7.min.js' %}"></script>
-<script src="{% static 'libs/luxon.min.js' %}"></script>    
-
-
 {% block css_files %}
-
-<!-- Stylesheets: : These should live on base.html, experiencing issues with static-->
-
-    <link rel="stylesheet" href="{% static libs 'libs/bootstrap-5.0.2-dist/css/bootstrap.min.css' %}" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'solar_coordination_classic/css/styles.css' %}" /> 
 {% endblock %}
 
 {% block page_title %} Login {% endblock %}
