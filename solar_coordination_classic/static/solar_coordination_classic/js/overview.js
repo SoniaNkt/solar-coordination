@@ -58,7 +58,16 @@ d3.json('/fetch_solar_and_booked_values').then(json => {
         .attr('data-amount', d => d.amount[0])
         .attr('width', d => graphWidth)
         .attr('height', y.bandwidth())
-        .attr('fill', '#dcdcdc66')
+        .attr('fill', d => {
+            const diff = d.amount[1] - d.amount[0];
+            if (d.amount[1] < d.amount[0]) {
+                return '#dbf0df'; // Apply green if d.amount[1] (booked amount) is *less* than d.amount[0] (amount of solar)
+            } else if (d.amount[1] > d.amount[0]) {
+                return '#fdeaee'; // Apply red if d.amount[1] (booked amount) is *greater* than d.amount[0] (amount of solar)
+            } else if (d.amount[0] == 0) {
+                return '#dcdcdc66'; // Apply grey if there is no solar available to book
+            }
+        })
         .attr('x', 1)
         .attr('y', d => y(d.hour));
 
