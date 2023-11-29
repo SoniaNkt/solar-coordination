@@ -18,7 +18,7 @@ from django.utils.timezone import datetime
 from django.db import IntegrityError
 from django.db.models import Count, Q, Sum
 
-from .models import Participant, Condition, SolarGeneration, SolarGenerationProfile, Booking, EnergyPricing
+from .models import Participant, Condition, SolarGeneration, SolarGenerationProfile, Booking, EnergyPricing, ComfortProfile, ComfortCostSlot
 from .djutils import to_dict
 
 # Create your views here.
@@ -26,6 +26,7 @@ from .djutils import to_dict
 
 def welcome_page(request):
     return render(request, 'welcome.html')
+
 
 @csrf_exempt
 @require_POST
@@ -88,24 +89,78 @@ def index(request):
     except:
         raise Http404()
 
+
 @login_required
 def overview(request):
     current_user = request.user
-    group_size = Participant.objects.get(user=current_user).condition.group_size
-    user_bookings = Booking.objects.filter(user=current_user).order_by('hour')
+    participant = Participant.objects.get(user=current_user)
+    group_size = participant.condition.group_size
 
-    user_booking_values_dict = fetch_cumulative_hourly_user_bookings(current_user)
+    hourly_user_booking_values_dict = fetch_cumulative_hourly_user_bookings(current_user)
     solar_values_dict = fetch_solar_values()
 
     solar_spend_list = []
-    for hour, booked_amount in user_booking_values_dict.items():
-        # solar amount needs to be what was left and should include any other bookings the user made in that hour
+    for hour, booked_amount in hourly_user_booking_values_dict.items():
         solar_amount = solar_values_dict.get(hour)
         solar_spend_list.append({'hour': hour, 'amount': (int(solar_amount)/group_size) - float(booked_amount)}) # if positive they used their portion if -ve they borrowed from their neighbors
 
+    user_bookings = Booking.objects.filter(user=current_user).order_by('hour')
     total_electricity_savings = calculate_electricity_savings(solar_spend_list)
+    reward = calculate_reward(participant.comfort_profile, hourly_user_booking_values_dict)
 
-    return render(request, 'overview.html', {'user_bookings': user_bookings, 'total_electricity_savings': total_electricity_savings})
+    return render(request, 'overview.html', {'user_bookings': user_bookings, 'total_electricity_savings': total_electricity_savings, 'reward': reward})
+
+
+def fetch_cumulative_hourly_user_bookings(current_user):
+    user_booking_values = (
+        Booking.objects
+        .filter(user=current_user)
+        .values('hour')
+        .annotate(cumulative_booking_amount=Sum('amount'))
+        .order_by('hour')
+    )  
+    booking_values_dict = {str(item['hour']): item['cumulative_booking_amount'] for item in user_booking_values}
+
+    return booking_values_dict
+
+
+def fetch_solar_values():
+    default_profile = SolarGenerationProfile.objects.get(name="Sunny Autumn Day")  
+    solar_values = SolarGeneration.objects.filter(solar_generation_profile=default_profile).order_by('hour').only('hour', 'amount')
+    solar_values_dict = {str(item.hour): item.amount for item in solar_values}
+
+    return solar_values_dict
+
+
+def calculate_electricity_savings(solar_spend_list):
+    energy_pricing = EnergyPricing.objects.get(name='UK Energy Pricing', active=True)
+
+    for entry in solar_spend_list:
+        amount = entry['amount']
+
+        # if positive they used their portion if -ve they borrowed from their neighbors
+        if amount > 0: 
+            entry['electricity_savings'] = amount*float(energy_pricing.import_price) # what they would have pulled from the grid
+        elif amount < 0:
+            entry['electricity_savings'] = (abs(amount)*float(energy_pricing.import_price)) - (abs(amount)*float(energy_pricing.export_price)) # what they would have pulled from the grid minus what they pulled from their neighbors
+        else:
+            entry['electricity_savings'] = 0
+
+    total_electricity_savings = format(sum(entry['electricity_savings'] for entry in solar_spend_list), '.2f')
+
+    return total_electricity_savings
+
+def calculate_reward(user_comfort_profile, hourly_user_booking_values_dict):
+    comfort_cost_values = ComfortCostSlot.objects.filter(comfort_profile=user_comfort_profile).order_by('hour').only('hour', 'cost')
+    comfort_cost_values_dict = {str(item.hour): item.cost for item in comfort_cost_values}
+
+    reward = []
+    for hour, booked_amount in hourly_user_booking_values_dict.items():
+        hourly_cost = comfort_cost_values_dict.get(hour, 0)
+        reward.append({'hour': hour, 'cost': float(booked_amount)*float(hourly_cost)})
+
+    total_reward = format(sum(item['cost'] for item in reward), '.2f')
+    return total_reward
 
 @login_required
 def fetch_solar_and_booked_values(request):
@@ -125,43 +180,7 @@ def fetch_solar_and_booked_values(request):
 
     return JsonResponse({'data': solar_values_list})
 
-def fetch_solar_values():
-    default_profile = SolarGenerationProfile.objects.get(name="Sunny Autumn Day")  
-    solar_values = SolarGeneration.objects.filter(solar_generation_profile=default_profile).order_by('hour').only('hour', 'amount')
-    solar_values_dict = {str(item.hour): item.amount for item in solar_values}
 
-    return solar_values_dict
-
-def fetch_cumulative_hourly_user_bookings(current_user):
-    user_booking_values = (
-        Booking.objects
-        .filter(user=current_user)
-        .values('hour')
-        .annotate(cumulative_booking_amount=Sum('amount'))
-        .order_by('hour')
-    )  
-    booking_values_dict = {str(item['hour']): item['cumulative_booking_amount'] for item in user_booking_values}
-
-    return booking_values_dict
-
-def calculate_electricity_savings(solar_spend_list):
-    energy_pricing = EnergyPricing.objects.get(name='UK Energy Pricing', active=True)
-
-    for entry in solar_spend_list:
-        amount = entry['amount']
-
-        if amount > 0:
-            entry['electricity_savings'] = amount*float(energy_pricing.import_price) # what they would have pulled from the grid
-        elif amount < 0:
-            entry['electricity_savings'] = (abs(amount)*float(energy_pricing.import_price)) - (abs(amount)*float(energy_pricing.export_price)) # what they would have pulled from the grid minus what they pulled from their neighbors
-        else:
-            entry['electricity_savings'] = 0
-
-    total_electricity_savings = format(sum(entry['electricity_savings'] for entry in solar_spend_list), '.2f')
-
-    return total_electricity_savings
-
-     
 @csrf_exempt
 @login_required
 def create_booking(request):
