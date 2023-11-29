@@ -91,16 +91,31 @@
             </div>
             {% comment %} End of Booking success/error messages {% endcomment %}
 
-            <div class="col-md-12 col-xl-9 canvas" style="padding-top: 50px;">
+            <div class="col-md-12 col-xl-8 canvas" style="padding-top: 50px;">
                 <p><i>Place your mouse over the graph to interact</i></p>
             </div>
 
-            <div class="col-md-12 col-xl-3" style="padding-top: 32px;">
-                <h5><b>My Bookings</b></h5><br>
-                <div id="bookingList"></div>
-                <table class="table table-striped table-bordered">
+            <div class="col-md-12 col-xl-4" style="padding-top: 35px;">
+                <h5><b>My Savings</b></h5><br>
+                <table class="table table-bordered" style="table-layout: fixed;">
                     <thead>
-                      <tr>
+                        <tr class="table-success">
+                            <th scope="col">Money saved on Electricity</th>
+                            <th scope="col">Savings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>£{{ total_electricity_savings }}</b></td>
+                            <td><b>£10</b></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h5 style="padding-top: 35px;"><b>My Bookings</b></h5><br>
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                      <tr class="table-secondary">
                         <th scope="col">Time</th>
                         <th scope="col">Activity</th>
                         <th scope="col">Consupmtion</th>
@@ -109,9 +124,9 @@
                     <tbody>
                         {% for booking in user_bookings %}
                             <tr>
-                                <td>{{ booking.hour }}00Hrs</td>
+                                <td>{{ booking.hour }}</td>
                                 <td>{{ booking.name }}</td>
-                                <td>{{ booking.amount|floatformat:0 }}kW</td>
+                                <td>{{ booking.amount|floatformat:2 }}kW</td>
                             </tr>
                         {% endfor %}
                     </tbody>

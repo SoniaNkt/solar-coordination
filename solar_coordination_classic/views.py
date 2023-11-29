@@ -1,5 +1,7 @@
 # coding: utf-8
 import json
+import re
+from decimal import Decimal
 from random import gauss, randrange, randint, choice as random_choice
 from collections import defaultdict
 
@@ -16,7 +18,7 @@ from django.utils.timezone import datetime
 from django.db import IntegrityError
 from django.db.models import Count, Q, Sum
 
-from .models import Participant, Condition, SolarGeneration, SolarGenerationProfile, Booking
+from .models import Participant, Condition, SolarGeneration, SolarGenerationProfile, Booking, EnergyPricing
 from .djutils import to_dict
 
 # Create your views here.
@@ -89,24 +91,32 @@ def index(request):
 @login_required
 def overview(request):
     current_user = request.user
+    group_size = Participant.objects.get(user=current_user).condition.group_size
     user_bookings = Booking.objects.filter(user=current_user).order_by('hour')
 
-    return render(request, 'overview.html', {'user_bookings': user_bookings})
+    user_booking_values_dict = fetch_cumulative_hourly_user_bookings(current_user)
+    solar_values_dict = fetch_solar_values()
+
+    solar_spend_list = []
+    for hour, booked_amount in user_booking_values_dict.items():
+        # solar amount needs to be what was left and should include any other bookings the user made in that hour
+        solar_amount = solar_values_dict.get(hour)
+        solar_spend_list.append({'hour': hour, 'amount': (int(solar_amount)/group_size) - float(booked_amount)}) # if positive they used their portion if -ve they borrowed from their neighbors
+
+    total_electricity_savings = calculate_electricity_savings(solar_spend_list)
+
+    return render(request, 'overview.html', {'user_bookings': user_bookings, 'total_electricity_savings': total_electricity_savings})
 
 @login_required
-def fetch_solar_values(request):
-    default_profile = SolarGenerationProfile.objects.get(name="Sunny Autumn Day")  
-    solar_values = SolarGeneration.objects.filter(solar_generation_profile=default_profile).order_by('hour').only('hour', 'amount')
-
+def fetch_solar_and_booked_values(request):
     booking_values = (
         Booking.objects
         .values('hour')
         .annotate(cumulative_booking_amount=Sum('amount'))
         .order_by('hour')
     )   
-
-    solar_values_dict = {str(item.hour): item.amount for item in solar_values}
     booking_values_dict = {str(item['hour']): item['cumulative_booking_amount'] for item in booking_values}
+    solar_values_dict = fetch_solar_values()
 
     solar_values_list = []
     for hour, solar_amount in solar_values_dict.items():
@@ -114,24 +124,66 @@ def fetch_solar_values(request):
         solar_values_list.append({'hour': hour, 'amount': [int(solar_amount), booked_amount]})
 
     return JsonResponse({'data': solar_values_list})
+
+def fetch_solar_values():
+    default_profile = SolarGenerationProfile.objects.get(name="Sunny Autumn Day")  
+    solar_values = SolarGeneration.objects.filter(solar_generation_profile=default_profile).order_by('hour').only('hour', 'amount')
+    solar_values_dict = {str(item.hour): item.amount for item in solar_values}
+
+    return solar_values_dict
+
+def fetch_cumulative_hourly_user_bookings(current_user):
+    user_booking_values = (
+        Booking.objects
+        .filter(user=current_user)
+        .values('hour')
+        .annotate(cumulative_booking_amount=Sum('amount'))
+        .order_by('hour')
+    )  
+    booking_values_dict = {str(item['hour']): item['cumulative_booking_amount'] for item in user_booking_values}
+
+    return booking_values_dict
+
+def calculate_electricity_savings(solar_spend_list):
+    energy_pricing = EnergyPricing.objects.get(name='UK Energy Pricing', active=True)
+
+    for entry in solar_spend_list:
+        amount = entry['amount']
+
+        if amount > 0:
+            entry['electricity_savings'] = amount*float(energy_pricing.import_price) # what they would have pulled from the grid
+        elif amount < 0:
+            entry['electricity_savings'] = (abs(amount)*float(energy_pricing.import_price)) - (abs(amount)*float(energy_pricing.export_price)) # what they would have pulled from the grid minus what they pulled from their neighbors
+        else:
+            entry['electricity_savings'] = 0
+
+    total_electricity_savings = format(sum(entry['electricity_savings'] for entry in solar_spend_list), '.2f')
+
+    return total_electricity_savings
+
      
 @csrf_exempt
 @login_required
 def create_booking(request):
     if request.method == 'POST':
-        hour = request.POST.get('hour')
-        amount = request.POST.get('amount')
+        hour = int(request.POST.get('hour'))
+        amount = int(request.POST.get('amount'))
         name = request.POST.get('name')
         user = request.user 
 
-        booking = Booking.objects.create(
-            user=user,
-            hour=hour,
-            name=name,
-            amount=amount,
-        )
+        duration = int(re.findall(r'\d+', name)[0])
+        hourly_consumption = amount/duration
 
-        booking.save()
+        for i in range(duration):
+            booking = Booking.objects.create(
+                user=user,
+                hour=hour,
+                name=name,
+                amount=hourly_consumption,
+            )
+            booking.save()
+            hour += 1
+
         return redirect('overview')
 
     response_data = {'error': 'Unsupported method'}

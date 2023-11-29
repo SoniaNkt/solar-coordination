@@ -9,26 +9,29 @@
 {% endblock %}
 
 {% block content %}
-<div class='jumbotron text-center'>
-  <h1>Welcome</h1>
-</div>
+<div class="container-fluid">
 
-<br>
-<p>Thank you for your interest in the study!</p>
+  <div class='jumbotron'>
+    <h1>Welcome</h1>
+  </div>
 
-<p>On the next page you will be presented with information about the study and what your participation involves.</p>
-<p>Please read the information carefully. You will only be able to proceed with the study if you consent to the participant information.</p>
+  <br>
+  <p>Thank you for your interest in the study!</p>
 
-<br>
+  <p>On the next page you will be presented with information about the study and what your participation involves.</p>
+  <p>Please read the information carefully. You will only be able to proceed with the study if you consent to the participant information.</p>
 
-<p>When you are ready, press &quot;start&quot;.</p>
+  <br>
 
-<div class="form-group form-check">
-    <input type="checkbox" class="form-check-input" id="consentCheck">
-    <label class="form-check-label" for="consentCheck">I agree to the terms above</label>
-</div>
+  <p>When you are ready, press &quot;start&quot;.</p>
 
-<div id="button-div">
-  <button class="btn btn-dark" id="startButton" disabled> <a style="color:white;text-decoration: none;" href="{% url 'overview' %}">Start</button>
+  <div class="form-group form-check">
+      <input type="checkbox" class="form-check-input" id="consentCheck">
+      <label class="form-check-label" for="consentCheck">I agree to the terms above</label>
+  </div>
+
+  <div id="button-div">
+    <button class="btn btn-dark" id="startButton" disabled> <a style="color:white;text-decoration: none;" href="{% url 'overview' %}">Start</button>
+  </div>
 </div>
 {% endblock %}

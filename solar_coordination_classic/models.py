@@ -97,3 +97,7 @@ class Booking(models.Model):
 
     def __str__(self):
         return self.name
+
+class StudyRunAllocation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    study_run = models.ForeignKey(StudyRun, on_delete=models.CASCADE, null=True)

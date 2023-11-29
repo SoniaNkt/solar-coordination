@@ -9,7 +9,7 @@ urlpatterns = [
 
     path("task", views.index, name="main"),
     path("overview", views.overview, name="overview"),
-    path("fetch_solar_values", views.fetch_solar_values, name="fetch_solar_values"),
+    path("fetch_solar_and_booked_values", views.fetch_solar_and_booked_values, name="fetch_solar_and_booked_values"),
     path('create_booking/', views.create_booking, name='create_booking'),
 
 ]

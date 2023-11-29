@@ -26,7 +26,7 @@ const yAxisGroup = entireGraph.append('g')
     .attr('transform', `translate(0, 0)`); // Move the y-axis to the left
 
 // Pull JSON data
-d3.json('/fetch_solar_values').then(json => {
+d3.json('/fetch_solar_and_booked_values').then(json => {
     data = json.data
     console.log(data)
 
@@ -144,11 +144,11 @@ d3.json('/fetch_solar_values').then(json => {
 
             // Update the 'amount' based on the selected option
             if (selectedActivity === 'Oven (2Hrs)') {
-                amount.val(200);
+                amount.val(10);
             } else if (selectedActivity === 'Dishwasher (2Hrs)') {
-                amount.val(250);
+                amount.val(2.5);
             } else if (selectedActivity === 'Washing Machine (3Hrs)') {
-                amount.val(350);
+                amount.val(8);
             } else {
                 amount.val('');
             }
@@ -194,11 +194,11 @@ d3.json('/fetch_solar_values').then(json => {
             success: function () {
                 $('#bookingModal').modal('hide');
                 showSuccessAlert();
-                setTimeout(hideSuccessAlert, 5000);
+                setTimeout(hideSuccessAlert, 15000);
             },
             error: function () {
                 showErrorAlert();
-                setTimeout(hideErrorAlert, 5000);
+                setTimeout(hideErrorAlert, 15000);
             }
         });
     });
