@@ -63,6 +63,6 @@ admin.site.register(Booking, BookingAdmin)
 
 
 class ParticipantAdmin(admin.ModelAdmin):
-    list_display = ("user", "comfort_profile",)
+    list_display = ("user", "comfort_profile", "condition")
 
 admin.site.register(Participant, ParticipantAdmin)
