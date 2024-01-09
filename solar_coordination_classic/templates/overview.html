@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block js_imports %}
-    <script src="{% static 'solar_coordination_classic/js/overview.js' %}"></script>
+<script src="{% static 'solar_coordination_classic/js/overview.js' %}"></script>
 {% endblock %}
 
 
@@ -13,24 +13,25 @@
 
 {% block content %}
 
-   <div class="container-fluid">
-        <div class="row" style="margin-bottom:0">
+<div class="container-fluid">
+    <div class="row" style="margin-bottom:0">
 
-            <div class="modal fade" id="bookingModal" tabindex="-1" role="dialog" aria-labelledby="bookingModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                  <div class="modal-content">
+        <div class="modal fade" id="bookingModal" tabindex="-1" role="dialog" aria-labelledby="bookingModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
                     <div class="modal-header">
-                      <h5 class="modal-title" id="bookingModalLabel">Make a booking</h5>
-                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                      </button>
+                        <h5 class="modal-title" id="bookingModalLabel">Make a booking</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
 
                     <div class="modal-body">
-                      <form method="post">
+                        <form method="post">
                             {% csrf_token %}
                             {{ form.as_p }}
-            
+
                             <div class="form-group">
                                 <label for="hourSelected">Time selected:</label>
                                 <input type="text" class="form-control" id="hourSelected" readonly>
@@ -39,7 +40,8 @@
                             <div class="form-group">
                                 <label for="selectedActivity">Activity:</label>
                                 <select class="form-control" id="selectedActivity" required>
-                                    <option disabled selected value>Click to select the activity you would like to book</option>
+                                    <option disabled selected value>Click to select the activity you would like to book
+                                    </option>
                                     <option value="Oven (2Hrs)">Oven (2Hrs)</option>
                                     <option value="Dishwasher (2Hrs)">Dishwasher (2Hrs)</option>
                                     <option value="Washing Machine (3Hrs)">Washing Machine (3Hrs)</option>
@@ -50,90 +52,93 @@
                                 {% comment %} <label for="amount">Amount:</label> {% endcomment %}
                                 <input type="hidden" id="amount" name="amount" class="form-control" readonly>
                             </div>
-                      </form>
-                    </div>  
+                        </form>
+                    </div>
 
                     <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                      <button type="button" class="btn btn-success" id="saveBooking">Book</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-success" id="saveBooking">Book</button>
                     </div>
-                  </div>
                 </div>
             </div>
-            {% comment %} End of Booking Modal {% endcomment %}
+        </div>
+        {% comment %} End of Booking Modal {% endcomment %}
 
-            <div class="col-md-12 col-xl-9">
-                <h2>Solar Coordination</h2>
-            </div>
-            <div class="col-md-12 col-xl-3">
-                <button class="btn btn-dark btn-secondary" style="float: right; margin-left: 1em;"> <a style="color:white;text-decoration: none;" href="{% url 'logout' %}"> <i class="bi bi-box-arrow-right"></i> Log out </a></button>
-            </div>
+        <div class="col-md-12 col-xl-9">
+            <h2>Solar Coordination</h2>
+        </div>
+        <div class="col-md-12 col-xl-3">
+            <button class="btn btn-dark btn-secondary" style="float: right; margin-left: 1em;"> <a
+                    style="color:white;text-decoration: none;" href="{% url 'logout' %}"> <i
+                        class="bi bi-box-arrow-right"></i> Log out </a></button>
+        </div>
 
-            <div class="col-md-12 col-xl-12">
-                <img id="legend" style="max-width:500px; width:100%; padding-top:30px" src="{% static 'solar_coordination_classic/css/images/legend.svg' %}"/>
-            </div>
+        <div class="col-md-12 col-xl-12">
+            <img id="legend" style="max-width:500px; width:100%; padding-top:30px"
+                src="{% static 'solar_coordination_classic/css/images/legend.svg' %}" />
+        </div>
 
-            {% comment %} Booking success/error messages {% endcomment %}
-            <div class="col-md-12 col-xl-8">
-                <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
-                    You have successfully created a booking.
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-
-                <div class="alert alert-danger alert-dismissible fade show" role="alert" id="error-alert">
-                    An error occurred while creating your booking.
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            </div>
-            {% comment %} End of Booking success/error messages {% endcomment %}
-
-            <div class="col-md-12 col-xl-8 canvas" style="padding-top: 50px;">
-                <p><i>Place your mouse over the graph to interact</i></p>
+        {% comment %} Booking success/error messages {% endcomment %}
+        <div class="col-md-12 col-xl-8">
+            <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
+                You have successfully created a booking.
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
 
-            <div class="col-md-12 col-xl-4" style="padding-top: 35px;">
-                <h5><b>My Savings and Reward</b></h5><br>
-                <table class="table table-bordered" style="table-layout: fixed;">
-                    <thead>
-                        <tr class="table-active">
-                            <th scope="col">Money saved on Electricity</th>
-                            <th scope="col">Reward</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><b>£{{ total_electricity_savings }}</b></td>
-                            <td><b>£{{ reward }}</b></td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert" id="error-alert">
+                An error occurred while creating your booking.
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </div>
+        {% comment %} End of Booking success/error messages {% endcomment %}
 
-                <h5 style="padding-top: 35px;"><b>My Bookings</b></h5><br>
-                <table class="table table-striped table-bordered table-hover">
-                    <thead>
-                      <tr class="table-secondary">
+        <div class="col-md-12 col-xl-8 canvas" style="padding-top: 50px;">
+            <p><i>Place your mouse over the graph to interact</i></p>
+        </div>
+
+        <div class="col-md-12 col-xl-4" style="padding-top: 35px;">
+            <h5><b>My Savings and Reward</b></h5><br>
+            <table class="table table-bordered" style="table-layout: fixed;">
+                <thead>
+                    <tr class="table-active">
+                        <th scope="col">Money saved on Electricity</th>
+                        <th scope="col">Reward</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>£{{ total_electricity_savings }}</b></td>
+                        <td><b>£{{ reward }}</b></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h5 style="padding-top: 35px;"><b>My Bookings</b></h5><br>
+            <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr class="table-secondary">
                         <th scope="col">Time</th>
                         <th scope="col">Activity</th>
                         <th scope="col">Consupmtion</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                        {% for booking in user_bookings %}
-                            <tr>
-                                <td>{{ booking.hour }}</td>
-                                <td>{{ booking.name }}</td>
-                                <td>{{ booking.amount|floatformat:2 }}kW</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in consolidated_bookings %}
+                    <tr>
+                        <td>{{ booking.min_hour }}:00hrs - {{booking.max_hour}}:00hrs</td>
+                        <td>{{ booking.name }}</td>
+                        <td>{{ booking.total_amount|floatformat:2 }} kW</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </div>  
+
+    </div>
+</div>
 
 {% endblock %}

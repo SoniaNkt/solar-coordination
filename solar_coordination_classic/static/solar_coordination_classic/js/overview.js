@@ -156,7 +156,7 @@ d3.json('/fetch_solar_and_booked_values').then(json => {
             if (selectedActivity === 'Oven (2Hrs)') {
                 amount.val(10);
             } else if (selectedActivity === 'Dishwasher (2Hrs)') {
-                amount.val(2.5);
+                amount.val(3);
             } else if (selectedActivity === 'Washing Machine (3Hrs)') {
                 amount.val(8);
             } else {

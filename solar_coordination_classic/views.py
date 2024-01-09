@@ -16,7 +16,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.timezone import datetime
 from django.db import IntegrityError
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Q, Sum, F, Min, Max
+from django.db.models.functions import Trunc
 
 from .models import Participant, Condition, SolarGeneration, SolarGenerationProfile, Booking, EnergyPricing, ComfortProfile, ComfortCostSlot
 from .djutils import to_dict
@@ -104,11 +105,25 @@ def overview(request):
         solar_amount = solar_values_dict.get(hour)
         solar_spend_list.append({'hour': hour, 'amount': (int(solar_amount)/group_size) - float(booked_amount)}) # if positive they used their portion if -ve they borrowed from their neighbors
 
-    user_bookings = Booking.objects.filter(user=current_user).order_by('hour')
+    truncated_created_at = Trunc('created_at', 'second')
+    user_bookings = (
+        Booking.objects
+        .filter(user=current_user)
+        .annotate(truncated_created_at=truncated_created_at)
+        .values('name', 'truncated_created_at')
+        .annotate(
+            total_amount=Sum('amount'),
+            min_hour=Min('hour'),
+            max_hour=Max('hour')
+        )
+        .order_by('truncated_created_at')
+    )
+
+    consolidated_bookings = list(user_bookings)
     total_electricity_savings = calculate_electricity_savings(solar_spend_list)
     reward = calculate_reward(participant.comfort_profile, hourly_user_booking_values_dict)
 
-    return render(request, 'overview.html', {'user_bookings': user_bookings, 'total_electricity_savings': total_electricity_savings, 'reward': reward})
+    return render(request, 'overview.html', {'consolidated_bookings': consolidated_bookings, 'total_electricity_savings': total_electricity_savings, 'reward': reward})
 
 
 def fetch_cumulative_hourly_user_bookings(current_user):
