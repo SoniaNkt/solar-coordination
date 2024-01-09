@@ -204,6 +204,7 @@ d3.json('/fetch_solar_and_booked_values').then(json => {
                 $('#bookingModal').modal('hide');
                 showSuccessAlert();
                 setTimeout(hideSuccessAlert, 15000);
+                window.location.reload();
             },
             error: function () {
                 showErrorAlert();
