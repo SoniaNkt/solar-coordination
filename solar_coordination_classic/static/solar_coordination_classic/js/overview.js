@@ -118,15 +118,15 @@ d3.json('/fetch_solar_and_booked_values').then(json => {
                 placement: 'right'
             });
             $this.popover('show');
-        } else {
-            const $this = $(this);
-            const popoverMsg = `${d.hour} is fully booked.`;
-            $this.popover({
-                trigger: 'hover',
-                content: popoverMsg,
-                placement: 'right'
-            });
-            $this.popover('show');
+            // } else {
+            //     const $this = $(this);
+            //     const popoverMsg = `${d.hour} is fully booked.`;
+            //     $this.popover({
+            //         trigger: 'hover',
+            //         content: popoverMsg,
+            //         placement: 'right'
+            //     });
+            //     $this.popover('show');
         }
     }).on('mouseleave', function () {
         const $this = $(this);
@@ -135,7 +135,8 @@ d3.json('/fetch_solar_and_booked_values').then(json => {
 
     // click to book if solar is available    
     rectGroups.on('click', (event, d) => {
-        if (parseFloat(d.amount[0]) > 0 && parseFloat(d.amount[1]) < parseFloat(d.amount[0])) {
+        // if (parseFloat(d.amount[0]) > 0 && parseFloat(d.amount[1]) < parseFloat(d.amount[0])) {
+        if (parseFloat(d.amount[0]) > 0) {
             // Populate the hour input field in the modal
             $('#hourSelected').val(d.hour);
 
